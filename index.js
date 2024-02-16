@@ -17,7 +17,8 @@ var gameBoard = document.querySelector('#game-section');
 var letterKey = document.querySelector('#key-section');
 var rules = document.querySelector('#rules-section');
 var stats = document.querySelector('#stats-section');
-var gameOverBox = document.querySelector('#game-over-section');
+var gameOverWinBox = document.querySelector('#game-over-win-section');
+var gameOverLoseBox = document.querySelector('#game-over-lose-section');
 var gameOverGuessCount = document.querySelector('#game-over-guesses-count');
 var gameOverGuessGrammar = document.querySelector('#game-over-guesses-plural');
 
@@ -112,9 +113,11 @@ function submitGuess() {
     errorMessage.innerText = '';
     compareGuess();
     if (checkForWin()) {
-      setTimeout(declareWinner, 1000);
+      setTimeout(processGameEnd(true), 1000);
+    } else if(!checkForWin() && currentRow === 6) {
+      setTimeout(processGameEnd(false), 1000);
     } else {
-      changeRow();
+      changeRow(); 
     }
   } else {
     errorMessage.innerText = 'Not a valid word. Try again!';
@@ -189,24 +192,30 @@ function changeRow() {
   updateInputPermissions();
 }
 
-function declareWinner() {
-  recordGameStats();
-  changeGameOverText();
-  viewGameOverMessage();
+function processGameEnd(wonGame) {
+  recordGameStats(wonGame);
+  if(wonGame){
+    changeWinMessageText();
+  }
+  viewGameOverMessage(wonGame);
   setTimeout(startNewGame, 4000);
 }
 
-function recordGameStats() {
-  gamesPlayed.push({ solved: true, guesses: currentRow });
+function recordGameStats(wonGame) {
+  if (wonGame) {
+    gamesPlayed.push({ solved: true, guesses: currentRow });
+  } else {
+    gamesPlayed.push({ solved: false, guesses: 6 });
+  }
 }
 
-function changeGameOverText() {
-  gameOverGuessCount.innerText = currentRow;
-  if (currentRow < 2) {
-    gameOverGuessGrammar.classList.add('collapsed');
-  } else {
-    gameOverGuessGrammar.classList.remove('collapsed');
-  }
+function changeWinMessageText() {
+    gameOverGuessCount.innerText = currentRow;
+    if (currentRow < 2) {
+      gameOverGuessGrammar.classList.add('collapsed');
+    } else {
+      gameOverGuessGrammar.classList.remove('collapsed');
+    }
 }
 
 function startNewGame() {
@@ -247,7 +256,8 @@ function viewGame() {
   gameBoard.classList.remove('collapsed');
   rules.classList.add('collapsed');
   stats.classList.add('collapsed');
-  gameOverBox.classList.add('collapsed')
+  gameOverWinBox.classList.add('collapsed')
+  gameOverLoseBox.classList.add('collapsed')
   viewGameButton.classList.add('active');
   viewRulesButton.classList.remove('active');
   viewStatsButton.classList.remove('active');
@@ -263,8 +273,12 @@ function viewStats() {
   viewStatsButton.classList.add('active');
 }
 
-function viewGameOverMessage() {
-  gameOverBox.classList.remove('collapsed')
+function viewGameOverMessage(wonGame) {
+  if(wonGame) {
+    gameOverWinBox.classList.remove('collapsed')
+  } else {
+    gameOverLoseBox.classList.remove('collapsed')
+  }
   letterKey.classList.add('hidden');
   gameBoard.classList.add('collapsed');
 }
