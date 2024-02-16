@@ -3,6 +3,7 @@ var winningWord = '';
 var currentRow = 1;
 var guess = '';
 var gamesPlayed = [];
+var words = [];
 
 // Query Selectors
 var inputs = document.querySelectorAll('input');
@@ -23,6 +24,7 @@ var gameOverGuessGrammar = document.querySelector('#game-over-guesses-plural');
 // Event Listeners
 window.addEventListener('load', setGame);
 
+// keyup fires when key is released. Go to next row?
 for (var i = 0; i < inputs.length; i++) {
   inputs[i].addEventListener('keyup', function() { moveToNextInput(event) });
 }
@@ -41,14 +43,26 @@ viewStatsButton.addEventListener('click', viewStats);
 
 // Functions
 function setGame() {
-  currentRow = 1;
-  winningWord = getRandomWord();
-  updateInputPermissions();
+  getWordList()
+  .then(wordList => {
+    words = wordList;
+    getRandomWord(wordList)
+    currentRow = 1;
+    winningWord = getRandomWord();
+    updateInputPermissions();
+  });
 }
 
-function getRandomWord() {
+function getWordList() {
+  fetch('http://localhost:3001/api/v1/words')
+    .then(response => {
+      return response.json()
+    });
+}
+
+function getRandomWord(dataSet) {
   var randomIndex = Math.floor(Math.random() * 2500);
-  return words[randomIndex];
+      winningWord = dataSet[randomIndex];
 }
 
 function updateInputPermissions() {
@@ -60,6 +74,7 @@ function updateInputPermissions() {
     }
   }
 
+  // look at this more. Could we add where to focus after guess?
   inputs[0].focus();
 }
 
@@ -87,6 +102,7 @@ function clickLetter(e) {
   inputs[activeIndex + 1].focus();
 }
 
+// nested if not good. Pull out into separate function?
 function submitGuess() {
   if (checkIsWord()) {
     errorMessage.innerText = '';
@@ -101,6 +117,8 @@ function submitGuess() {
   }
 }
 
+// this is checking to see if word is in the array.
+// then compareGuess will check to see if it is THE word.
 function checkIsWord() {
   guess = '';
 
@@ -113,6 +131,7 @@ function checkIsWord() {
   return words.includes(guess);
 }
 
+// maybe split winning word at top of function?
 function compareGuess() {
   var guessLetters = guess.split('');
 
@@ -144,6 +163,7 @@ function updateBoxColor(letterLocation, className) {
   row[letterLocation].classList.add(className);
 }
 
+// correct location key update is weird and not fully working
 function updateKeyColor(letter, className) {
   var keyLetter = null;
 
@@ -244,3 +264,4 @@ function viewGameOverMessage() {
   letterKey.classList.add('hidden');
   gameBoard.classList.add('collapsed');
 }
+
