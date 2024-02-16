@@ -44,17 +44,16 @@ viewStatsButton.addEventListener('click', viewStats);
 // Functions
 function setGame() {
   getWordList()
-  .then(wordList => {
-    words = wordList;
-    getRandomWord(wordList)
-    currentRow = 1;
-    winningWord = getRandomWord();
-    updateInputPermissions();
-  });
+      .then(wordList => {
+        words = wordList;
+        currentRow = 1;
+        winningWord = getRandomWord(words);
+        updateInputPermissions();
+      });
 }
 
 function getWordList() {
-  fetch('http://localhost:3001/api/v1/words')
+  return fetch('http://localhost:3001/api/v1/words')
     .then(response => {
       return response.json()
     });
@@ -62,7 +61,8 @@ function getWordList() {
 
 function getRandomWord(dataSet) {
   var randomIndex = Math.floor(Math.random() * 2500);
-      winningWord = dataSet[randomIndex];
+
+  return dataSet[randomIndex];
 }
 
 function updateInputPermissions() {
@@ -78,12 +78,16 @@ function updateInputPermissions() {
   inputs[0].focus();
 }
 
+// focus onto guess button. Then to next line.
+// if all full, don't moveToNextInput
 function moveToNextInput(e) {
   var key = e.keyCode || e.charCode;
 
   if( key !== 8 && key !== 46 ) {
     var indexOfNext = parseInt(e.target.id.split('-')[2]) + 1;
-    inputs[indexOfNext].focus();
+    if(indexOfNext !== 30) {
+      inputs[indexOfNext].focus();
+    }
   }
 }
 
