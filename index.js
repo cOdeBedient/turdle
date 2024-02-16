@@ -21,6 +21,9 @@ var gameOverWinBox = document.querySelector('#game-over-win-section');
 var gameOverLoseBox = document.querySelector('#game-over-lose-section');
 var gameOverGuessCount = document.querySelector('#game-over-guesses-count');
 var gameOverGuessGrammar = document.querySelector('#game-over-guesses-plural');
+var totalGamesText = document.querySelector('#stats-total-games');
+var percentCorrectText = document.querySelector('#stats-percent-correct');
+var averageGuessesText = document.querySelector('#stats-average-guesses');
 
 // Event Listeners
 window.addEventListener('load', setGame);
@@ -40,7 +43,7 @@ viewRulesButton.addEventListener('click', viewRules);
 
 viewGameButton.addEventListener('click', viewGame);
 
-viewStatsButton.addEventListener('click', viewStats);
+viewStatsButton.addEventListener('click', handleStats);
 
 // Functions
 function setGame() {
@@ -51,6 +54,11 @@ function setGame() {
         winningWord = getRandomWord(words);
         updateInputPermissions();
       });
+}
+
+function handleStats() {
+  changeStatsInfo();
+  viewStats();
 }
 
 function getWordList() {
@@ -113,9 +121,9 @@ function submitGuess() {
     errorMessage.innerText = '';
     compareGuess();
     if (checkForWin()) {
-      setTimeout(processGameEnd(true), 1000);
+      setTimeout(function() {processGameEnd(true)}, 1000);
     } else if(!checkForWin() && currentRow === 6) {
-      setTimeout(processGameEnd(false), 1000);
+      setTimeout(function() {processGameEnd(false)}, 1000);
     } else {
       changeRow(); 
     }
@@ -237,6 +245,31 @@ function clearKey() {
   for (var i = 0; i < keyLetters.length; i++) {
     keyLetters[i].classList.remove('correct-location-key', 'wrong-location-key', 'wrong-key');
   }
+}
+
+function computeStatsData() {
+  var totalGamesPlayed = gamesPlayed.length;
+  var gamesWon = gamesPlayed.filter(game => game.solved);
+  var percentGamesWon = (gamesWon.length / totalGamesPlayed) * 100;
+  var totalGuesses = gamesWon.reduce((guesses, game) => {
+    guesses += game.guesses;
+
+    return guesses
+  }, 0);
+  var averageGuesses = (totalGuesses / gamesWon.length).toFixed(1);
+
+  return {
+    totalGamesPlayed: totalGamesPlayed,
+    percentGamesWon: percentGamesWon,
+    averageGuesses: averageGuesses
+  };
+}
+
+function changeStatsInfo() {
+  var stats = computeStatsData();
+  totalGamesText.innerText = `${stats.totalGamesPlayed}`;
+  percentCorrectText.innerText = `${stats.percentGamesWon}`
+  averageGuessesText.innerText = `${stats.averageGuesses}`
 }
 
 // Change Page View Functions
