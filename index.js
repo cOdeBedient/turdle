@@ -2,7 +2,6 @@
 var winningWord = '';
 var currentRow = 1;
 var guess = '';
-var gamesPlayed = [];
 var words = [];
 
 // Query Selectors
@@ -57,8 +56,13 @@ function setGame() {
 }
 
 function handleStats() {
-  changeStatsInfo();
-  viewStats();
+  fetch('http://localhost:3001/api/v1/games')
+    .then(response => response.json())
+    .then(stats => {
+      changeStatsInfo(stats);
+      viewStats();
+    })
+  
 }
 
 function getWordList() {
@@ -163,7 +167,6 @@ function compareGuess() {
       updateKeyColor(guessLetters[i], 'wrong-key');
     }
   }
-
 }
 
 function updateBoxColor(letterLocation, className) {
@@ -210,11 +213,22 @@ function processGameEnd(wonGame) {
 }
 
 function recordGameStats(wonGame) {
+  const result = {};
   if (wonGame) {
-    gamesPlayed.push({ solved: true, guesses: currentRow });
+    result.solved = true
+    result.guesses = currentRow;
   } else {
-    gamesPlayed.push({ solved: false, guesses: 6 });
+      result.solved = false;
+      result.guesses = 6;
   }
+    fetch('http://localhost:3001/api/v1/games', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify(result)
+    })
+    .then(response => response.json())
+    .then(json => console.log(json))
+    .catch(err => console.log(err));
 }
 
 function changeWinMessageText() {
@@ -247,16 +261,17 @@ function clearKey() {
   }
 }
 
-function computeStatsData() {
-  var totalGamesPlayed = gamesPlayed.length;
-  var gamesWon = gamesPlayed.filter(game => game.solved);
+function computeStatsData(data) {
+  var totalGamesPlayed = data.length;
+  var gamesWon = data.filter(game => game.solved);
   var percentGamesWon = (gamesWon.length / totalGamesPlayed) * 100;
   var totalGuesses = gamesWon.reduce((guesses, game) => {
-    guesses += game.guesses;
+    guesses += game.numGuesses;
 
     return guesses
   }, 0);
   var averageGuesses = (totalGuesses / gamesWon.length).toFixed(1);
+ 
 
   return {
     totalGamesPlayed: totalGamesPlayed,
@@ -265,8 +280,8 @@ function computeStatsData() {
   };
 }
 
-function changeStatsInfo() {
-  var stats = computeStatsData();
+function changeStatsInfo(data) {
+  var stats = computeStatsData(data);
   totalGamesText.innerText = `${stats.totalGamesPlayed}`;
   percentCorrectText.innerText = `${stats.percentGamesWon}`
   averageGuessesText.innerText = `${stats.averageGuesses}`
